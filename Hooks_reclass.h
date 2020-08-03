@@ -35,6 +35,15 @@ DWORD EntityObjStart = 0x0;
 DWORD EntlistJmpBack = 0x0;
 bool alreadyThere = false;
 
+
+class Controll
+{
+public:
+
+
+}; 
+Controll* localptr;
+
 class PlayerData
 {
 public:
@@ -61,32 +70,38 @@ public:
 	char pad_01FC[612]; //0x01FC
 }; //Size: 0x0460
 PlayerData* entsptr;
+PlayerData* entsptrAD;
 
 namespace nEntity
 {
 	DWORD offset = 0x10;
 
 	ImVec2 SCoords;
-	std::vector<Vector3> bones;
+	std::vector<Vector3> CoordsBones;
 	std::vector<ImVec2> SCoordsBone;
 
-	DWORD& GetOffset();
-	DWORD GetIsEntity();
+	std::vector<Vector3> CoordsBones2;
 
-	Vector3 GetCoords();
-	std::vector<Vector3> GetCoordsBones();
+	void Initialize();
+	void SetBase(PlayerData* entsptr, DWORD ptr);
+	DWORD& GetOffset();
+	DWORD GetIsEntity(PlayerData* entsptr);
+
+	Vector3 GetBone(PlayerData* entsptr, int bone, int id);
+	Vector3 GetCoords(PlayerData* entsptr);
+	Vector3 GetCoordsBones(PlayerData* entsptr, int bone, int id);
 
 	ImVec2& GetSCoords();
-	std::vector<ImVec2>& GetSCoordsBones();
+	ImVec2& GetSCoordsBones(int bone);
 
-	bool GetEntity();
+	bool GetEntity(PlayerData* entsptr);
 
-	int GetTeam();
-	int GetTeamZombie();
-	int GetDeath();
-	int GetHealth();
+	int GetTeam(PlayerData* entsptr);
+	int GetTeamZombie(PlayerData* entsptr);
+	int GetDeath(PlayerData* entsptr);
+	int GetHealth(PlayerData* entsptr);
 
-	const std::string GetName();
+	const std::string GetName(PlayerData* entsptr);
 };
 
 class string18
@@ -425,7 +440,7 @@ public:
 
 
 
-bool nEntity::GetEntity()
+bool nEntity::GetEntity(PlayerData* entsptr)
 {
 	if (entsptr == NULL)
 	{
@@ -434,180 +449,226 @@ bool nEntity::GetEntity()
 	else return true;
 }
 
+void nEntity::Initialize()
+{
+	SCoordsBone.resize(12);
+	CoordsBones.resize(12);
+	CoordsBones2.resize(12);
+}
+
+void nEntity::SetBase(PlayerData* entsptr, DWORD ptr)
+{
+	entsptr = (PlayerData*)ptr;
+}
+
 DWORD& nEntity::GetOffset()
 {
 	return nEntity::offset;
 }
 
-DWORD nEntity::GetIsEntity()
+DWORD nEntity::GetIsEntity(PlayerData* entsptr)
 {
+	if (entsptr == nullptr) return NULL;
+
 	return entsptr->localPlayer;
 }
 
-int nEntity::GetTeam()
+int nEntity::GetTeam(PlayerData* entsptr)
 {
+	if (entsptr == nullptr) return -1;
+
 	return entsptr->team;
 }
 
-int nEntity::GetTeamZombie()
+int nEntity::GetTeamZombie(PlayerData* entsptr)
 {
+	if (entsptr == nullptr) return -1;
+
 	return entsptr->teamZombie;
 }
 
-Vector3 nEntity::GetCoords()
+Vector3 nEntity::GetCoords(PlayerData* entsptr)
 {
+	if (entsptr == nullptr) return Vector3(0, 0, 0);
+
 	return entsptr->pos;
 }
 
-int nEntity::GetDeath()
+int nEntity::GetDeath(PlayerData* entsptr)
 {
+	if (entsptr == nullptr) return -1;
+
 	return entsptr->death;
 }
 
-int nEntity::GetHealth()
+int nEntity::GetHealth(PlayerData* entsptr)
 {
+	if (entsptr == nullptr) return -1;
 
 	return entsptr->health;
 }
 
-const std::string nEntity::GetName()
+const std::string nEntity::GetName(PlayerData* entsptr)
 {
-	if (entsptr != NULL)
-	{
-		if (entsptr->string18ptr != NULL)
-		{
-			WCHAR* txt = (WCHAR*)entsptr->string18ptr->name;
+	if(entsptr == nullptr) return "";
 
-			return (narrow(txt));
-		}
+	if (entsptr->string18ptr != NULL)
+	{
+		WCHAR* txt = (WCHAR*)entsptr->string18ptr->name;
+
+		return (narrow(txt));
 	}
 }
 
 
-Vector3 GetBone(int bone, PlayerData* entsptr)
+Vector3 nEntity::GetBone(PlayerData* entsptr, int bone, int id)
 {
-	if (entsptr != NULL)
+	if (entsptr == nullptr) return Vector3(0, 0, 0);
+
+	if (bone == KeyBone::Bone_Head)
 	{
-		if (bone == KeyBone::Head)
-		{
-			if (entsptr != NULL && entsptr->Head != NULL && entsptr->Head->N00000D89 != NULL && entsptr->Head->N00000D89->N00000DA8 != NULL)
-			{
-				return entsptr->Head->N00000D89->N00000DA8->Coords;
-			}
-			else entsptr = NULL;
-		}
+		if (entsptr->Head == nullptr || 
+			entsptr->Head->N00000D89 == nullptr ||
+			entsptr->Head->N00000D89->N00000DA8 == nullptr) return Vector3(0, 0, 0);
 
-		if (bone == KeyBone::Body)
-		{
-			if (entsptr != NULL && entsptr->Body != NULL && entsptr->Body->N00000D1F != NULL && entsptr->Body->N00000D1F->N00000D3E != NULL)
-			{
-				return entsptr->Body->N00000D1F->N00000D3E->Coords;
-			}
-			else entsptr = NULL;
-		}
+		if (id == 0) return CoordsBones[bone] = entsptr->Head->N00000D89->N00000DA8->Coords;
+		if (id == 1) return CoordsBones2[bone] = entsptr->Head->N00000D89->N00000DA8->Coords;
+	}
 
-		if (bone == KeyBone::LArm1)
-		{
-			if (entsptr != NULL && entsptr->LArm != NULL && entsptr->LArm->N00000DD8 != NULL && entsptr->LArm->N00000DD8->N00000DEA != NULL)
-			{
-				return entsptr->LArm->N00000DD8->N00000DEA->N00000E1D->Coords;
-			}
-		}
+	if (bone == KeyBone::Bone_Body)
+	{
+		if (entsptr->Body == nullptr ||
+			entsptr->Body->N00000D1F == nullptr ||
+			entsptr->Body->N00000D1F->N00000D3E == nullptr) return Vector3(0, 0, 0);
+			
+		if (id == 0) return CoordsBones[bone] = entsptr->Body->N00000D1F->N00000D3E->Coords;
+		if (id == 1) return CoordsBones2[bone] = entsptr->Body->N00000D1F->N00000D3E->Coords;
+	}
 
-		if (bone == KeyBone::LArm2)
-		{
-			if (entsptr != NULL && entsptr->LArm != NULL && entsptr->LArm->N00000DD9 != NULL && entsptr->LArm->N00000DD9->N00000DFE != NULL)
-			{
-				return entsptr->LArm->N00000DD9->N00000DFE->N00000E56->Coords;
-			}
-		}
+	if (bone == KeyBone::Bone_LArm1)
+	{
+		if (entsptr->LArm == nullptr ||
+			entsptr->LArm->N00000DD8 == nullptr ||
+			entsptr->LArm->N00000DD8->N00000DEA == nullptr ||
+			entsptr->LArm->N00000DD8->N00000DEA->N00000E1D == nullptr) return Vector3(0, 0, 0);
 
-		if (bone == KeyBone::RArm1)
-		{
-			if (entsptr != NULL && entsptr->RArm != NULL && entsptr->RArm->N00000ECA != NULL && entsptr->RArm->N00000ECA->N00000EDC != NULL)
-			{
-				return entsptr->RArm->N00000ECA->N00000EDC->N00000F0F->Coords;
-			}
-		}
+		if (id == 0) return CoordsBones[bone] = entsptr->LArm->N00000DD8->N00000DEA->N00000E1D->Coords;
+		if (id == 1) return CoordsBones2[bone] = entsptr->LArm->N00000DD8->N00000DEA->N00000E1D->Coords;
+	}
 
-		if (bone == KeyBone::RArm2)
-		{
-			if (entsptr != NULL && entsptr->RArm != NULL && entsptr->RArm->N00000ECB != NULL && entsptr->RArm->N00000ECB->N00000EF0 != NULL)
-			{
-				return entsptr->RArm->N00000ECB->N00000EF0->N00000F48->Coords;
-			}
-		}
+	if (bone == KeyBone::Bone_LArm2)
+	{
+		if (entsptr->LArm == nullptr ||
+			entsptr->LArm->N00000DD9 == nullptr ||
+			entsptr->LArm->N00000DD9->N00000DFE == nullptr ||
+			entsptr->LArm->N00000DD9->N00000DFE->N00000E56 == nullptr) return Vector3(0, 0, 0);
 
-		if (bone == KeyBone::LLeg1)
-		{
-			if (entsptr != NULL && entsptr->LLeg != NULL && entsptr->LLeg->N00000F78 != NULL && entsptr->LLeg->N00000F78->N00000F9E != NULL)
-			{
-				return entsptr->LLeg->N00000F78->N00000F9E->N00000FE5->Coords;
-			}
-		}
+		if (id == 0) return CoordsBones[bone] = entsptr->LArm->N00000DD9->N00000DFE->N00000E56->Coords;
+		if (id == 1) return CoordsBones2[bone] = entsptr->LArm->N00000DD9->N00000DFE->N00000E56->Coords;
+	}
 
-		if (bone == KeyBone::LLeg2)
-		{
-			if (entsptr != NULL && entsptr->LLeg != NULL && entsptr->LLeg->N00000F79 != NULL && entsptr->LLeg->N00000F79->N00000FB2 != NULL)
-			{
-				return entsptr->LLeg->N00000F79->N00000FB2->N0000101E->Coords;
-			}
-		}
+	if (bone == KeyBone::Bone_RArm1)
+	{
+		if (entsptr->RArm == nullptr || 
+			entsptr->RArm->N00000ECA == nullptr ||
+			entsptr->RArm->N00000ECA->N00000EDC == nullptr ||
+			entsptr->RArm->N00000ECA->N00000EDC->N00000F0F == nullptr) return Vector3(0, 0, 0);
 
-		if (bone == KeyBone::LLeg3)
-		{
-			if (entsptr != NULL && entsptr->LLeg != NULL && entsptr->LLeg->N00000F7A != NULL && entsptr->LLeg->N00000F7A->N00000FC6 != NULL)
-			{
-				return entsptr->LLeg->N00000F7A->N00000FC6->N00001057->Coords;
-			}
-		}
+		if (id == 0) return CoordsBones[bone] = entsptr->RArm->N00000ECA->N00000EDC->N00000F0F->Coords;
+		if (id == 1) return CoordsBones2[bone] = entsptr->RArm->N00000ECA->N00000EDC->N00000F0F->Coords;
+	}
 
-		if (bone == KeyBone::RLeg1)
-		{
-			if (entsptr != NULL && entsptr->RLeg != NULL && entsptr->RLeg->N00000F8C != NULL && entsptr->RLeg->N00000F8C->N00001085 != NULL)
-			{
-				return entsptr->RLeg->N00000F8C->N00001085->N000010CC->Coords;
-			}
-		}
+	if (bone == KeyBone::Bone_RArm2)
+	{
+		if (entsptr->RArm == nullptr ||
+			entsptr->RArm->N00000ECB == nullptr ||
+			entsptr->RArm->N00000ECB->N00000EF0 == nullptr ||
+			entsptr->RArm->N00000ECB->N00000EF0->N00000F48 == nullptr) return Vector3(0, 0, 0);
 
-		if (bone == KeyBone::RLeg2)
-		{
-			if (entsptr != NULL && entsptr->RLeg != NULL && entsptr->RLeg->N00000F8D != NULL && entsptr->RLeg->N00000F8D->N00001099 != NULL)
-			{
-				return entsptr->RLeg->N00000F8D->N00001099->N00001106->Coords;
-			}
-		}
+		if (id == 0) return CoordsBones[bone] = entsptr->RArm->N00000ECB->N00000EF0->N00000F48->Coords;
+		if (id == 1) return CoordsBones2[bone] = entsptr->RArm->N00000ECB->N00000EF0->N00000F48->Coords;
+	}
 
-		if (bone == KeyBone::RLeg3)
-		{
-			if (entsptr != NULL && entsptr->RLeg != NULL && entsptr->RLeg->N00000F8E != NULL && entsptr->RLeg->N00000F8E->N000010AD != NULL)
-			{
-				return entsptr->RLeg->N00000F8E->N000010AD->N0000113F->Coords;
-			}
-		}
+	if (bone == KeyBone::Bone_LLeg1)
+	{
+		if (entsptr->LLeg == nullptr ||
+			entsptr->LLeg->N00000F78 == nullptr ||
+			entsptr->LLeg->N00000F78->N00000F9E == nullptr ||
+			entsptr->LLeg->N00000F78->N00000F9E->N00000FE5 == nullptr) return Vector3(0, 0, 0);
+
+		if (id == 0) return CoordsBones[bone] = entsptr->LLeg->N00000F78->N00000F9E->N00000FE5->Coords;
+		if (id == 1) return CoordsBones2[bone] = entsptr->LLeg->N00000F78->N00000F9E->N00000FE5->Coords;
+	}
+
+	if (bone == KeyBone::Bone_LLeg2)
+	{
+		if (entsptr->LLeg == nullptr ||
+			entsptr->LLeg->N00000F79 == nullptr ||
+			entsptr->LLeg->N00000F79->N00000FB2 == nullptr ||
+			entsptr->LLeg->N00000F79->N00000FB2->N0000101E == nullptr) return Vector3(0, 0, 0);
+
+		if (id == 0) CoordsBones[bone] = entsptr->LLeg->N00000F79->N00000FB2->N0000101E->Coords;
+		if (id == 1) CoordsBones2[bone] = entsptr->LLeg->N00000F79->N00000FB2->N0000101E->Coords;
+
+		return CoordsBones[bone];
+	}
+
+	if (bone == KeyBone::Bone_LLeg3)
+	{
+		if (entsptr->LLeg == nullptr ||
+			entsptr->LLeg->N00000F7A == nullptr ||
+			entsptr->LLeg->N00000F7A->N00000FC6 == nullptr ||
+			entsptr->LLeg->N00000F7A->N00000FC6->N00001057 == nullptr) return Vector3(0, 0, 0);
+
+		if (id == 0) CoordsBones[bone] = entsptr->LLeg->N00000F7A->N00000FC6->N00001057->Coords;
+		if (id == 1) CoordsBones2[bone] = entsptr->LLeg->N00000F7A->N00000FC6->N00001057->Coords;
+
+		return CoordsBones[bone];
+	}
+
+	if (bone == KeyBone::Bone_RLeg1)
+	{
+		if (entsptr->RLeg == nullptr ||
+			entsptr->RLeg->N00000F8C == nullptr ||
+			entsptr->RLeg->N00000F8C->N00001085 == nullptr ||
+			entsptr->RLeg->N00000F8C->N00001085->N000010CC == nullptr) return Vector3(0, 0, 0);
+
+		if (id == 0) CoordsBones[bone] = entsptr->RLeg->N00000F8C->N00001085->N000010CC->Coords;
+		if (id == 1) CoordsBones2[bone] = entsptr->RLeg->N00000F8C->N00001085->N000010CC->Coords;
+
+		return CoordsBones[bone];
+	}
+
+	if (bone == KeyBone::Bone_RLeg2)
+	{
+		if (entsptr->RLeg == nullptr ||
+			entsptr->RLeg->N00000F8D == nullptr ||
+			entsptr->RLeg->N00000F8D->N00001099 == nullptr ||
+			entsptr->RLeg->N00000F8D->N00001099->N00001106 == nullptr) return Vector3(0, 0, 0);
+
+		if (id == 0) CoordsBones[bone] = entsptr->RLeg->N00000F8D->N00001099->N00001106->Coords;
+		if (id == 1) CoordsBones2[bone] = entsptr->RLeg->N00000F8D->N00001099->N00001106->Coords;
+
+		return CoordsBones[bone];
+	}
+
+	if (bone == KeyBone::Bone_RLeg3)
+	{
+		if (entsptr->RLeg == nullptr ||
+			entsptr->RLeg->N00000F8E == nullptr ||
+			entsptr->RLeg->N00000F8E->N000010AD == nullptr ||
+			entsptr->RLeg->N00000F8E->N000010AD->N0000113F == nullptr) return Vector3(0, 0, 0);
+
+		if (id == 0) CoordsBones[bone] = entsptr->RLeg->N00000F8E->N000010AD->N0000113F->Coords;
+		if (id == 1) CoordsBones2[bone] = entsptr->RLeg->N00000F8E->N000010AD->N0000113F->Coords;
+
+		return CoordsBones[bone];
 	}
 }
 
-std::vector<Vector3> nEntity::GetCoordsBones()
-{
-	bones[KeyBone::Head] = GetBone(KeyBone::Head, entsptr);
-	bones[KeyBone::Body] = GetBone(KeyBone::Body, entsptr);
-
-	//bones[KeyBone::LArm1] = GetBone(KeyBone::LArm1, ents[id]);
-	//bones[KeyBone::LArm2] = GetBone(KeyBone::LArm2, ents[id]);
-
-	//bones[KeyBone::RArm1] = GetBone(KeyBone::RArm1, ents[id]);
-	//bones[KeyBone::RArm2] = GetBone(KeyBone::RArm2, ents[id]);
-
-	//bones[KeyBone::LLeg1] = GetBone(KeyBone::LLeg1, ents[id]);
-	//bones[KeyBone::LLeg2] = GetBone(KeyBone::LLeg2, ents[id]);
-	//bones[KeyBone::LLeg3] = GetBone(KeyBone::LLeg3, ents[id]);
-
-	//bones[KeyBone::RLeg1] = GetBone(KeyBone::RLeg1, ents[id]);
-	//bones[KeyBone::RLeg2] = GetBone(KeyBone::RLeg2, ents[id]);
-	//bones[KeyBone::RLeg3] = GetBone(KeyBone::RLeg3, ents[id]);
-											 
-	return bones;
+Vector3 nEntity::GetCoordsBones(PlayerData* entsptr, int bone, int id)
+{										 
+	return GetBone(entsptr, bone, id);
 }
 
 ImVec2& nEntity::GetSCoords()
@@ -615,8 +676,8 @@ ImVec2& nEntity::GetSCoords()
 	return SCoords;
 }
 
-std::vector<ImVec2>& nEntity::GetSCoordsBones()
+ImVec2& nEntity::GetSCoordsBones(int bone)
 {
-	return SCoordsBone;
+	return SCoordsBone[bone];
 }
 

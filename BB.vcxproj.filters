@@ -46,11 +46,17 @@
     <Filter Include="Header Files\Fonts">
       <UniqueIdentifier>{f001f3f8-5758-4bd5-af5a-7a8978e82723}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\NewFilter1">
-      <UniqueIdentifier>{d4c5b01c-3b32-4917-819b-e7ad07984f98}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\CheatEngine">
       <UniqueIdentifier>{785f60f8-6f48-4e98-80eb-ec9623e23218}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\AimBot">
+      <UniqueIdentifier>{23324e29-56ff-4559-b80a-0a053576f7f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Math">
+      <UniqueIdentifier>{93251f23-1de8-4da5-93b8-f9ec0063d10a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\KeyBind">
+      <UniqueIdentifier>{b619ef95-b94f-403d-95df-687fb75a3970}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +116,12 @@
     </ClCompile>
     <ClCompile Include="CheatEngine.cpp">
       <Filter>Header Files\CheatEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="AimBot.cpp">
+      <Filter>Header Files\AimBot</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyBind.cpp">
+      <Filter>Header Files\KeyBind</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -202,6 +214,18 @@
     </ClInclude>
     <ClInclude Include="CheatEngine.h">
       <Filter>Header Files\CheatEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="AimBot.h">
+      <Filter>Header Files\AimBot</Filter>
+    </ClInclude>
+    <ClInclude Include="nMath.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Handles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyBind.h">
+      <Filter>Header Files\KeyBind</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
